@@ -1,0 +1,27 @@
+version: "3.4"
+volumes:
+  node_data_full:
+    name: mainnet-node
+    external: false  
+  client_data:
+    name: mainnet-client
+    external: false
+services:
+
+  node_tezos:
+    container_name: octez-public-node-tezos
+    image: tezos/tezos:latest
+    command: octez-node --net-addr :9732 --rpc-addr 127.0.0.1:8732 --rpc-addr 0.0.0.0:8732 --allow-all-rpc 0.0.0.0:8732 --history-mode=full
+    ports:
+    - '9732:9732'
+    - '8732:8732'
+    expose:
+    - "8732"
+    - "9732" 
+    privileged: true
+    volumes:
+     - node_data_full:/var/run/tezos/node
+     - client_data:/var/run/tezos/client
+     - /dev/bus/usb:/dev/bus/usb
+    restart: on-failure
+    

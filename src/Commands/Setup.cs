@@ -39,7 +39,8 @@ namespace Plugin.Tezos.Commands
         public static async Task<bool> OnInstall()
         {
             await ProcessService.ExecuteCommand("docker","compose up -d node_rolling");
-            await ProcessService.ExecuteCommand("docker","exec -it octez-public-node-rolling rm -rf /var/run/tezos/node/data");
+            await ProcessService.ExecuteCommand("docker", "exec octez-public-node-rolling rm /var/run/tezos/node/data/lock");
+            await ProcessService.ExecuteCommand("docker", "exec octez-public-node-rolling rm -r /var/run/tezos/node/data");
             await ProcessService.ExecuteCommand("docker","compose stop node_rolling");
             await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/context");
             await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/store");

@@ -14,7 +14,7 @@ namespace Plugin.Tezos
             // todo : 
             new Task(async () =>
             {
-                await Setup.OnInstall();
+                await Setup.OnPreInstall();
             }).Start();
 
             Console.ReadLine();

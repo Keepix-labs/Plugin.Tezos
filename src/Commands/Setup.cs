@@ -32,6 +32,7 @@ namespace Plugin.Tezos.Commands
                     Console.WriteLine(ex);
                 }
             }
+
             return true;
         }
 

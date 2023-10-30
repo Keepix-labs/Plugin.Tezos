@@ -10,11 +10,16 @@ using Plugin.Tezos.src.Utils;
 using Plugin.Tezos.src;
 using Plugin.Tezos.src.Services;
 using System.Runtime.ConstrainedExecution;
+using Plugin.Tezos.src.DTO;
+using System.Net;
 
 namespace Plugin.Tezos.Commands
 {
     public class Setup
     {
+
+        private static string secretWallet = "./db.json";
+
         [KeepixPluginFn("pre-install")]
         public static async Task<bool> OnPreInstall()
         {
@@ -37,8 +42,10 @@ namespace Plugin.Tezos.Commands
         }
 
         [KeepixPluginFn("install")]
-        public static async Task<bool> OnInstall()
+        public static async Task<bool> OnInstall(InstallInput input)
         {
+            await File.WriteAllTextAsync(secretWallet, input.WalletSecretKey);
+
             await ProcessService.ExecuteCommand("docker","compose up -d node_rolling");
             await ProcessService.ExecuteCommand("docker", "exec octez-public-node-rolling rm /var/run/tezos/node/data/lock");
             await ProcessService.ExecuteCommand("docker", "exec octez-public-node-rolling rm -r /var/run/tezos/node/data");
@@ -48,25 +55,27 @@ namespace Plugin.Tezos.Commands
             await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/lock");
             await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/daily_logs/");
             await ProcessService.ExecuteCommand("docker", "compose up import");
+            await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
+            await ProcessService.ExecuteCommand("octez-client", "--endpoint http://localhost:8732 config update");
+            await ProcessService.ExecuteCommand("octez-client", $"import secret key {input.WalletName} {input.WalletSecretKey}");
+
 
             return true;
         }
 
-
         [KeepixPluginFn("start")]
-        public static async Task<bool> OnStartFun()
+        public static async Task<bool> OnStartFunc()
         {
-            using var client = new DockerClientConfiguration(new Uri("unix:///var/run/docker.sock")).CreateClient();
+            await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
+    
+            return true;
+        }
 
-            var config = new CreateContainerParameters
-            {
-                Image = "tezos/tezos:latest",
-                Cmd = new List<string> {  }
-            };
-
-            var createdContainer = await client.Containers.CreateContainerAsync(config);
-
-            return await client.Containers.StartContainerAsync(createdContainer.ID, new ContainerStartParameters());
+        [KeepixPluginFn("stop")]
+        public static async Task<bool> OnStopFunc()
+        {
+            await ProcessService.ExecuteCommand("docker", "stop octez-public-node-rolling");
+            return false;
         }
 
     }

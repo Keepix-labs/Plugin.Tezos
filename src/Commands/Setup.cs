@@ -12,6 +12,7 @@ using Plugin.Tezos.src.Services;
 using System.Runtime.ConstrainedExecution;
 using Plugin.Tezos.src.DTO;
 using System.Net;
+using Newtonsoft.Json.Linq;
 
 namespace Plugin.Tezos.Commands
 {
@@ -20,30 +21,30 @@ namespace Plugin.Tezos.Commands
 
         private static string secretWallet = "./db.json";
 
-        [KeepixPluginFn("pre-install")]
-        public static async Task<bool> OnPreInstall()
+        [KeepixPluginFn("install")]
+        public static async Task<bool> OnInstall(InstallInput input)
         {
-            using(var client = new HttpClient())
+
+            dynamic metadata = JObject.Parse(await ProcessService.ExecuteCommand("curl", $" -L  {Configurations.TEZOS_SNAPSHOT}"));
+            if (metadata.url == null || metadata.url == "")
+                return false;
+            using (var client = new HttpClient())
             {
+
+                Console.WriteLine("Start downloading");
                 try
                 {
-                    Console.WriteLine("Start downloading snapshot");
-                    await client.DownloadFileAsync(Configurations.TEZOS_SNAPSHOT, "/root/tezos-mainnet.rolling");
-                    Console.WriteLine("Finish");
+                    await client.DownloadFileAsync((string)metadata.url, "/root/tezos-mainnet.rolling");
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     // log error
                     Console.WriteLine(ex);
                 }
             }
 
-            return true;
-        }
 
-        [KeepixPluginFn("install")]
-        public static async Task<bool> OnInstall(InstallInput input)
-        {
+            Console.WriteLine("Start sync");
             await File.WriteAllTextAsync(secretWallet, input.WalletSecretKey);
 
             await ProcessService.ExecuteCommand("docker","compose up -d node_rolling");

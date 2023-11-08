@@ -14,7 +14,7 @@ namespace Plugin.Tezos
             // todo : 
             new Task(async () =>
             {
-                await Setup.OnPreInstall();
+                await Setup.OnInstall( new src.DTO.InstallInput { WalletAddress = "", WalletName = "", WalletSecretKey = ""});
             }).Start();
 
             Console.ReadLine();

@@ -12,11 +12,11 @@ namespace Plugin.Tezos
         public static void Main(string[] args)
         {
             // todo : 
-            new Task(async () =>
-            {
-                await Setup.OnInstall( new src.DTO.InstallInput { WalletAddress = "", WalletName = "", WalletSecretKey = ""});
-            }).Start();
-
+              new Task(async () =>
+              {
+                  await Setup.OnInstall( new src.DTO.WalletInput { WalletAddress = "", WalletName = "", WalletSecretKey = ""});
+              }).Start();
+            
             Console.ReadLine();
         }
     }

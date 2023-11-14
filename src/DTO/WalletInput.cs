@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Plugin.Tezos.src.DTO
 {
-    public class InstallInput
+    public class WalletInput
     {
         public string? WalletSecretKey { get; set; }
         public string? WalletName { get; set; }

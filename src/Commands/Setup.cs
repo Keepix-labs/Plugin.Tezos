@@ -24,7 +24,6 @@ namespace Plugin.Tezos.Commands
         [KeepixPluginFn("install")]     
         public static async Task<bool> OnInstall(WalletInput input)
         {
-
             var allRulesPassed = await SetupService.ApplyRules(SetupService.IsDockerRunning, SetupService.IsNotContainnerRunning, SetupService.IsCliInstalled);
             if (!allRulesPassed)
             {
@@ -38,12 +37,12 @@ namespace Plugin.Tezos.Commands
                 return false;
             }
 
-       /*     var isSnapshotDownloaded =  await SetupService.DownloadSnapshot((string)metadata.url, "/root/tezos-mainnet.rolling");
+            var isSnapshotDownloaded =  await SetupService.DownloadSnapshot((string)metadata.url, "/root/tezos-mainnet.rolling");
             if (!isSnapshotDownloaded)
             {
                 LoggerService.Log("Downloaded of the snapshot failed");
                 return false;
-            }*/
+            }
 
             await File.WriteAllTextAsync(secretWallet, input.WalletSecretKey);
 
@@ -67,6 +66,40 @@ namespace Plugin.Tezos.Commands
                 await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
                 await ProcessService.ExecuteCommand("octez-client", "--endpoint http://localhost:8732 config update");
                 await ProcessService.ExecuteCommand("octez-client", $"import secret key {input.WalletName} {input.WalletSecretKey}");
+            }
+            catch
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        [KeepixPluginFn("uninstall")]
+        public static async Task<bool> OnUinstall()
+        {
+            var allRulesPassed = await SetupService.ApplyRules(SetupService.IsDockerRunning);
+            if (!allRulesPassed)
+            {
+                return false;
+            }
+
+            try
+            {
+                LoggerService.Log("Starting to setup the tezos container");
+
+                await ProcessService.ExecuteCommand("docker", "volume rm mainnet-client mainnet-node");
+                Thread.Sleep(1000);
+
+                await ProcessService.ExecuteCommand("docker", "stop octez-public-node-rolling");
+                await ProcessService.ExecuteCommand("docker", "rm octez-public-node-rolling");
+                Thread.Sleep(1000);
+
+                await ProcessService.ExecuteCommand("docker", "stop octez-snapshot-import");
+                await ProcessService.ExecuteCommand("docker", "rm octez-snapshot-import");
+                Thread.Sleep(1000);
+                await ProcessService.ExecuteCommand("docker", "rmi tezos/tezos");
+
             }
             catch
             {
@@ -101,8 +134,20 @@ namespace Plugin.Tezos.Commands
 
 
             await ProcessService.ExecuteCommand("docker", "stop octez-public-node-rolling");
-            return false;
+            return true;
         }
 
+        [KeepixPluginFn("is-synchronized")]
+        public static async Task<bool> IsSynchronized()
+        {
+            var allRulesPassed = await SetupService.ApplyRules(SetupService.IsDockerRunning, SetupService.IsContainnerRunning, SetupService.IsCliInstalled);
+            if (!allRulesPassed)
+            {
+                return false;
+            }
+
+            var result = await ProcessService.ExecuteCommand("octez-client", "bootstrapped");
+            return result.Contains("Node is bootstrapped");
+        }
     }
 }

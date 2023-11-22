@@ -67,6 +67,7 @@ namespace Plugin.Tezos.src.Services
             }
         }
 
+
         public static async Task<bool> ApplyRules(params Func<Task<bool>>[] ruleFunctions)
         {
             var tasks = ruleFunctions.Select(rule => rule()).ToArray();

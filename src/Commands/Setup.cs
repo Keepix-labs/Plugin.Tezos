@@ -24,7 +24,9 @@ namespace Plugin.Tezos.Commands
         [KeepixPluginFn("install")]     
         public static async Task<bool> OnInstall(WalletInput input)
         {
-            var allRulesPassed = await SetupService.ApplyRules(SetupService.IsDockerRunning, SetupService.IsNotContainnerRunning, SetupService.IsCliInstalled);
+            var stateService = PluginStateManager.GetStateManager();
+            var allRulesPassed = await SetupService.ApplyRules(SetupService.IsDockerRunning, SetupService.IsNotContainnerRunning, SetupService.IsCliInstalled,
+                async () => { return true; });
             if (!allRulesPassed)
             {
                 return false;

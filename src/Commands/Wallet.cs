@@ -70,7 +70,7 @@ namespace Plugin.Tezos.src.Commands
             {
                 return false;
             }
-            await ProcessService.ExecuteCommand("octez-client", $"import secret key {input.WalletName} {input.WalletSecretKey}");
+            await ProcessService.ExecuteCommand("octez-client", $"import secret key mywallet unencrypted:{input.WalletSecretKey}");
             return true;
         }
 

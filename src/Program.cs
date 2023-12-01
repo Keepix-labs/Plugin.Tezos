@@ -11,13 +11,9 @@ namespace Plugin.Tezos
     {
         public static void Main(string[] args)
         {
-            // todo : 
-              new Task(async () =>
-              {
-                  await Setup.OnInstall( new src.DTO.WalletInput { WalletAddress = "", WalletName = "", WalletSecretKey = ""});
-              }).Start();
-            
-            Console.ReadLine();
+            string arg = args.Count() > 0 ? args[0] : "";
+            Task task = KeepixPlugin.Run(arg, Assembly.GetExecutingAssembly().GetTypes());
+            task.Wait();
         }
     }
 }

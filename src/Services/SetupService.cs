@@ -1,4 +1,5 @@
-﻿using Plugin.Tezos.src.Utils;
+﻿using Plugin.Tezos.src.DTO;
+using Plugin.Tezos.src.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -9,6 +10,7 @@ namespace Plugin.Tezos.src.Services
 {
     public class SetupService
     {
+
         public static async Task<bool> IsDockerRunning()
         {
             try
@@ -52,7 +54,6 @@ namespace Plugin.Tezos.src.Services
             }
         }
 
-
         public static async Task<bool> IsNotContainnerRunning()
         {
             try
@@ -67,13 +68,6 @@ namespace Plugin.Tezos.src.Services
             }
         }
 
-
-        public static async Task<bool> ApplyRules(params Func<Task<bool>>[] ruleFunctions)
-        {
-            var tasks = ruleFunctions.Select(rule => rule()).ToArray();
-            await Task.WhenAll(tasks);
-            return tasks.All(task => task.Result);
-        }
 
         public async static Task<bool> DownloadSnapshot(string url, string path)
         {
@@ -92,6 +86,30 @@ namespace Plugin.Tezos.src.Services
                     return false;
                 }
             }
+        }
+
+        public static async Task Synchronize(WalletInput input, PluginStateManager state)
+        {
+            try
+            {
+                state.DB.Store("STATE", PluginStateEnum.INSTALLING_NODE);
+
+                await ProcessService.ExecuteCommand("docker", "compose up import");
+                await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
+            }
+            catch (Exception ex)
+            {
+                throw ex;
+            }
+
+        }
+
+
+        public static async Task<bool> ApplyRules(params Func<Task<bool>>[] ruleFunctions)
+        {
+            var tasks = ruleFunctions.Select(rule => rule()).ToArray();
+            await Task.WhenAll(tasks);
+            return tasks.All(task => task.Result);
         }
     }
 }

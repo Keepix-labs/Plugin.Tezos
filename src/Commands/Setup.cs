@@ -20,8 +20,10 @@ namespace Plugin.Tezos.Commands
     {
 
         private static string secretWallet = "./db.json";
+        private static PluginStateManager stateManager;
 
-        [KeepixPluginFn("install")]     
+
+        [KeepixPluginFn("install")]
         public static async Task<bool> OnInstall(WalletInput input)
         {
             var stateService = PluginStateManager.GetStateManager();
@@ -39,7 +41,9 @@ namespace Plugin.Tezos.Commands
                 return false;
             }
 
-            var isSnapshotDownloaded =  await SetupService.DownloadSnapshot((string)metadata.url, "/root/tezos-mainnet.rolling");
+            stateManager = PluginStateManager.GetStateManager();
+            stateManager.DB.Store("STATE", PluginStateEnum.INSTALLING_SNAPSHOT);
+            var isSnapshotDownloaded = await SetupService.DownloadSnapshot((string)metadata.url, "/root/tezos-mainnet.rolling");
             if (!isSnapshotDownloaded)
             {
                 LoggerService.Log("Downloaded of the snapshot failed");
@@ -47,6 +51,7 @@ namespace Plugin.Tezos.Commands
             }
 
             await File.WriteAllTextAsync(secretWallet, input.WalletSecretKey);
+            stateManager.DB.Store("STATE", PluginStateEnum.INSTALLING_NODE);
 
             try
             {
@@ -58,16 +63,15 @@ namespace Plugin.Tezos.Commands
                 await ProcessService.ExecuteCommand("docker", "exec octez-public-node-rolling rm /var/run/tezos/node/data/lock");
                 await ProcessService.ExecuteCommand("docker", "exec octez-public-node-rolling rm -r /var/run/tezos/node/data");
                 Thread.Sleep(1000);
-                await ProcessService.ExecuteCommand("docker", "compose stop node_rolling"); 
+                await ProcessService.ExecuteCommand("docker", "compose stop node_rolling");
                 await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/context");
                 await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/store");
                 await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/lock");
                 await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/daily_logs/");
                 Thread.Sleep(1000);
-                await ProcessService.ExecuteCommand("docker", "compose up import");
-                await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
-                await ProcessService.ExecuteCommand("octez-client", "--endpoint http://localhost:8732 config update");
-                await ProcessService.ExecuteCommand("octez-client", $"import secret key {input.WalletName} {input.WalletSecretKey}");
+                await SetupService.Synchronize(input, stateManager);
+                return true;
+
             }
             catch
             {
@@ -121,7 +125,7 @@ namespace Plugin.Tezos.Commands
             }
 
             await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
-    
+
             return true;
         }
 

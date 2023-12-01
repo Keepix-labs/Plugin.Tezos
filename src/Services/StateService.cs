@@ -1,9 +1,4 @@
 ﻿using Plugin.Tezos.src.Utils;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Plugin.Tezos.src.Services
 {
@@ -22,7 +17,7 @@ namespace Plugin.Tezos.src.Services
         SETUP_ERROR_STATE,
     }
 
-    internal class PluginStateManager
+    public class PluginStateManager
     {
         public PluginStateEnum State { get; set; }
         public bool Installed { get; set; }
@@ -61,7 +56,6 @@ namespace Plugin.Tezos.src.Services
                 stateManager.State = PluginStateEnum.NO_STATE;
             }
 
-            // for know the global steps.
             try
             {
                 stateManager.Installed = stateManager.DB.Retrieve<bool>("INSTALLED");

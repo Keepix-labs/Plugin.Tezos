@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace Plugin.Tezos.src.Utils
 {
-    internal class JsonObjectStore
+    public class JsonObjectStore
     {
         private readonly string _filePath;
         private Dictionary<string, string>? _store;

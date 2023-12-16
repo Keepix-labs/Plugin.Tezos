@@ -18,14 +18,38 @@ namespace Plugin.Tezos.Commands
         [KeepixPluginFn("status")]
         public static async Task<string> OnStatus(WalletInput input)
         {
-            bool isNodeRegistered = false;
             stateManager = PluginStateManager.GetStateManager();
-            try { isNodeRegistered = stateManager.DB.Retrieve<bool>("REGISTERED"); } catch (Exception) { }
+            bool isNodeDelegated = false;
+            string DelegatedAddress = "";
+            DateTime? DelegatedDate = null;
+            double DelegatedBalance = 0.0;
+
+            try
+            {
+                isNodeDelegated = stateManager.DB.Retrieve<bool>("DELEGATED");
+                DelegatedAddress = stateManager.DB.Retrieve<string>("DELEGATED_ADDRESS");
+                DelegatedDate = stateManager.DB.Retrieve<DateTime>("DELEGATED_DATE");
+                DelegatedBalance = stateManager.DB.Retrieve<double>("DELEGATED_BALANCE");
+
+            }
+            catch (Exception) { }
+            string exitCode = "'0'";
+            try
+            {
+                exitCode = await ProcessService.ExecuteCommand("docker", "inspect octez-snapshot-import --format='{{.State.ExitCode}}'");
+            }
+            catch (Exception) { }
+
             return JsonConvert.SerializeObject(new
             {
                 NodeState = stateManager.State.ToString(),
                 Alive = await SetupService.IsContainnerRunning(),
-                IsRegistered = isNodeRegistered
+                IsSnapshotImportRunning = await SetupService.IsSnapshotImportRunning(),
+                SnapshotImportExitCode = exitCode.Trim(),
+                IsDelegated = isNodeDelegated,
+                DelegatedAddress,
+                DelegatedDate,
+                DelegatedBalance
             });
         }
     }

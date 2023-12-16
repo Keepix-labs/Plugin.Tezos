@@ -11,7 +11,7 @@ namespace Plugin.Tezos.src.Services
 {
     public class ProcessService
     {
-        public static async Task<string> ExecuteCommand(string command, string arguments)
+        public static async Task<string> ExecuteCommand(string command, string arguments, Func<Process, Task<string>> execute = null)
         {
             try
             {
@@ -27,13 +27,19 @@ namespace Plugin.Tezos.src.Services
                 using (Process process = new Process { StartInfo = startInfo })
                 {
                     process.Start();
-                    string result = await process.StandardOutput.ReadToEndAsync();
-                    process.WaitForExit();
-                    LoggerService.Log(result);
-                    return result;
+                    if (execute == null)
+                    {
+                        string result = await process.StandardOutput.ReadToEndAsync();
+                        process.WaitForExit();
+                        return result;
+                    }
+                    else
+                    {
+                        return await execute(process);
+                    }
                 }
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 LoggerService.Log(ex.Message, "error");
                 throw ex;

@@ -11,6 +11,7 @@ namespace Plugin.Tezos.src.Services
     public class SetupService
     {
 
+        private static PluginStateManager stateManager;
         public static async Task<bool> IsDockerRunning()
         {
             try
@@ -26,20 +27,6 @@ namespace Plugin.Tezos.src.Services
 
         }
 
-        public static async Task<bool> IsCliInstalled()
-        {
-            try
-            {
-                var res = await ProcessService.ExecuteCommand("octez-client", "--version");
-                return res != string.Empty;
-            }
-            catch
-            {
-                LoggerService.Log("octez-client is not installed on your device, please install it");
-                return false;
-            }
-        }
-
         public static async Task<bool> IsContainnerRunning()
         {
             try
@@ -50,6 +37,19 @@ namespace Plugin.Tezos.src.Services
             catch
             {
                 LoggerService.Log("Containner is not activated");
+                return false;
+            }
+        }
+
+        public static async Task<bool> IsSnapshotImportRunning()
+        {
+            try
+            {
+                var res = await ProcessService.ExecuteCommand("docker", "ps");
+                return res.Contains("octez-snapshot-import");
+            }
+            catch
+            {
                 return false;
             }
         }
@@ -93,8 +93,8 @@ namespace Plugin.Tezos.src.Services
             try
             {
                 state.DB.Store("STATE", PluginStateEnum.INSTALLING_NODE);
-
                 await ProcessService.ExecuteCommand("docker", "compose up import");
+                state.DB.Store("STATE", PluginStateEnum.NODE_RUNNING);
                 await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
             }
             catch (Exception ex)
@@ -104,6 +104,48 @@ namespace Plugin.Tezos.src.Services
 
         }
 
+        public static async Task initConfig()
+        {
+            await ProcessService.ExecuteCommand("docker", $"exec octez-public-node-rolling octez-client --endpoint http://localhost:8732 config update");
+            stateManager = PluginStateManager.GetStateManager();
+            var walletSecret = "";
+            try { walletSecret = stateManager.DB.Retrieve<string>("SECRET_WALLET"); } catch { }
+            if (walletSecret != "")
+                await ProcessService.ExecuteCommand("docker", $"exec octez-public-node-rolling octez-client import secret key WalletAddress unencrypted:{walletSecret}");
+        }
+
+        public static async Task setupNode(PluginStateManager stateManager)
+        {
+
+            try
+            {
+                LoggerService.Log("Starting to setup the tezos container");
+                try
+                {
+                    await ProcessService.ExecuteCommand("docker", "volume rm mainnet-client mainnet-node");
+
+                }
+                catch { }
+                Thread.Sleep(1000);
+
+                await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
+                Thread.Sleep(4000);
+                await ProcessService.ExecuteCommand("docker", "exec octez-public-node-rolling rm /var/run/tezos/node/data/lock");
+                await ProcessService.ExecuteCommand("docker", "exec octez-public-node-rolling rm -r /var/run/tezos/node/data");
+                Thread.Sleep(1000);
+                await ProcessService.ExecuteCommand("docker", "compose stop node_rolling");
+                await Task.Delay(1000);
+                await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/context");
+                await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/store");
+                await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/lock");
+                await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/daily_logs");
+                stateManager.DB.Store("STATE", PluginStateEnum.INSTALLING_NODE);
+            }
+            catch
+            {
+                LoggerService.Log("Installing node failed");
+            }
+        }
 
         public static async Task<bool> ApplyRules(params Func<Task<bool>>[] ruleFunctions)
         {

@@ -9,6 +9,8 @@ namespace Plugin.Tezos.src.Services
         INSTALLING_SNAPSHOT,
         INSTALLING_CLI,
         INSTALLING_NODE,
+        STARTING_SYNC,
+
         CONFIGURING_NODE,
         STARTING_NODE,
         NODE_RUNNING,

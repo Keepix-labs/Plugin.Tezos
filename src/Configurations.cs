@@ -10,6 +10,6 @@ namespace Plugin.Tezos.src
     public static class Configurations
     {
         public static string DOCKER_COMPOSE_DIRECTORY = "./";
-        public static string TEZOS_SNAPSHOT = "https://mainnet.xtz-shots.io/rolling-snapshot-metadata";
+        public static string TEZOS_SNAPSHOT = "https://snapshots.eu.tzinit.org/mainnet/rolling";
     }
 }

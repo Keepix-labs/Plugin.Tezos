@@ -42,7 +42,7 @@ namespace Plugin.Tezos.src.Utils
             if (_store == null ||
              !_store.ContainsKey(id))
             {
-                throw new KeyNotFoundException($"No data found for the given ID: {id}");
+                return default(T);
             }
 
             string json = _store[id];

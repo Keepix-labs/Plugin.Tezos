@@ -58,16 +58,20 @@ const RewardsSection: React.FC<any> = ({
     <div className="rewards-container">
       {isDelegated ? (
         <>
-          <div className="reward-block">
+          <div className="reward-block-deleg">
             Date of Delegation Start:{" "}
             {StatusData?.DelegatedDate
               ? new Date(StatusData.DelegatedDate).toLocaleDateString()
               : "Not delegated"}
           </div>
-          <div className="reward-block">
-            Profit since Delegation Start:
+          <div className="reward-block-deleg">
+            Rewards:{" "}
             {StatusData?.DelegatedBalance && walletBalance.result
-              ? (walletBalance.result - StatusData.DelegatedBalance).toFixed(2)
+              ? Number(
+                  (walletBalance.result - StatusData.DelegatedBalance).toFixed(
+                    2
+                  )
+                )
               : "N/A"}{" "}
             XTZ
           </div>

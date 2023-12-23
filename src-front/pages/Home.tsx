@@ -23,7 +23,7 @@ import axios from "axios";
 import BakersDropdown from "../components/Baker/BakersDropdown";
 import BakerDetails from "../components/Baker/BakerDetails";
 import RewardsSection from "../components/Baker/RewardsSection";
-import React from "react";
+import FAQ from "../components/Faq/Faq";
 
 interface BakerOptionType {
   label: string;
@@ -195,6 +195,7 @@ export default function HomePage() {
             full={true}
             step="2/3"
             label="Start the synchronization and validation of the node with the downloaded snapshot"
+            isLoading={false}
             disableStep={false}
           >
             <Btn
@@ -229,6 +230,7 @@ export default function HomePage() {
           <BigLoader
             full={true}
             label="There was a minor issue, the node needs to be restarted. Please click on the 'Restart Node' button"
+            isLoading={false}
             step="1/3"
             disableStep={false}
           >
@@ -248,10 +250,11 @@ export default function HomePage() {
         !syncProgressQuery?.data &&
         statusQuery.data?.NodeState === "STARTING_SYNC" &&
         statusQuery.data?.SnapshotImportExitCode === "'0'" &&
-        !statusQuery.data?.IsSnapshotImportRunning && (
+        !statusQuery.data?.IsSnapshotImportRunninƒPg && (
           <BigLoader
             full={true}
             label="Finalize the configuration and launch the node"
+            isLoading={false}
             step="3/3"
             disableStep={false}
           >
@@ -326,19 +329,17 @@ export default function HomePage() {
                     .ExecutionSyncProgressStepDescription ?? ""
                 }
               ></Progress>
-              {/* <strong><Icon icon="svg-spinners:3-dots-scale" /></strong> */}
             </div>
           </BigLoader>
         )}
 
-      {/* Register the node to RocketPool */}
       {statusQuery?.data &&
         syncProgressQuery?.data &&
         syncProgressQuery?.data?.IsSynced === true &&
         statusQuery.data?.NodeState === "NODE_RUNNING" &&
         walletQuery.data?.Wallet !== undefined && (
           <>
-            <BigLoader title="Node Ready." disableLabel={true} full={true}>
+            <BigLoader title="Node Ready" disableLabel={true} full={true}>
               {!isDelegated ? (
                 <Btn status="warning" onClick={() => getBakersQuery.mutate()}>
                   Delegating to a bakery
@@ -374,6 +375,7 @@ export default function HomePage() {
                   StatusData={statusQuery?.data}
                 />
               )}
+              <FAQ></FAQ>
             </BigLoader>
           </>
         )}

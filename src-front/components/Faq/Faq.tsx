@@ -7,24 +7,20 @@ type Question = {
 
 const questions: Question[] = [
   {
-    title: "How much does it cost ?",
-    desc: "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempora, qui expedita totam voluptatem consectetur dolores vel neque pariatur. Consequuntur veniam repellendus minus saepe culpa maiores, reprehenderit tempora perferendis quo? A!",
+    title: "Why Do I Go Back a Step After Clicking the Synchronize Button ?",
+    desc: `It's normal to experience this occasionally.Sometimes, issues can occur during synchronization. Simply retry the step, and everything should proceed smoothly.`,
   },
   {
-    title: "How much does it cost ?",
-    desc: "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempora, qui expedita totam voluptatem consectetur dolores vel neque pariatur. Consequuntur veniam repellendus minus saepe culpa maiores, reprehenderit tempora perferendis quo? A!",
+    title: "Can I Delegate Only a Portion of My Tezos ?",
+    desc: "No, unfortunately, that's not possible. When you delegate to a baker, all the Tezos in your wallet are delegated. This system is unique to Tezos. But don't worry! Bakers do not have direct access to your Tezos.",
   },
   {
-    title: "How much does it cost ?",
-    desc: "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempora, qui expedita totam voluptatem consectetur dolores vel neque pariatur. Consequuntur veniam repellendus minus saepe culpa maiores, reprehenderit tempora perferendis quo? A!",
-  },
-  {
-    title: "How much does it cost ?",
-    desc: "Lorem ipsum dolor sit, amet consectetur adipisicing elit. Tempora, qui expedita totam voluptatem consectetur dolores vel neque pariatur. Consequuntur veniam repellendus minus saepe culpa maiores, reprehenderit tempora perferendis quo? A!",
+    title: "Can I Delegate to Different Pools ?",
+    desc: "No, you cannot. When you delegate, you are delegating your entire wallet, so it's not possible to use the same wallet to delegate to different pools.",
   },
 ];
 
-export default function FAQ({ questions }: any) {
+export default function FAQ() {
   return (
     <div className="card card-default">
       <h2 className="h2">FAQ</h2>

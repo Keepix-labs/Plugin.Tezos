@@ -16,6 +16,7 @@ export default function BigLoader({
   full = false,
   disableLabel = false,
   children,
+  isLoading = true,
 }: any) {
   return (
     <div
@@ -36,7 +37,8 @@ export default function BigLoader({
               ""
             ) : (
               <strong>
-                {label} <Icon icon="svg-spinners:3-dots-scale" />
+                {label}{" "}
+                {isLoading ? <Icon icon="svg-spinners:3-dots-scale" /> : ""}
               </strong>
             )}
           </div>

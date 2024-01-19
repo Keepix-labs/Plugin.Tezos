@@ -1,11 +1,6 @@
 ﻿using Keepix.PluginSystem;
 using Plugin.Tezos.src.DTO;
 using Plugin.Tezos.src.Services;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Plugin.Tezos.src.Commands
 {
@@ -126,7 +121,7 @@ namespace Plugin.Tezos.src.Commands
                 return false;
             }
 
-            stateManager.DB.Store("SECRET_WALLET", input.WalletSecretKey);
+            stateManager.DB.Store("WalletAddress", input.WalletSecretKey);
             await ProcessService.ExecuteCommand("docker", $"exec octez-public-node-rolling octez-client import secret key WalletAddress unencrypted:{input.WalletSecretKey}");
             return true;
         }

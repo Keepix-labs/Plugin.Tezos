@@ -8,6 +8,6 @@ namespace Plugin.Tezos.src.DTO
 {
     public class WalletInput
     {
-        public string? WalletSecretKey { get; set; }
+        public string WalletSecretKey { get; set; }
     }
 }

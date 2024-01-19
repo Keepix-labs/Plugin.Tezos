@@ -250,7 +250,7 @@ export default function HomePage() {
         !syncProgressQuery?.data &&
         statusQuery.data?.NodeState === "STARTING_SYNC" &&
         statusQuery.data?.SnapshotImportExitCode === "'0'" &&
-        !statusQuery.data?.IsSnapshotImportRunninƒPg && (
+        !statusQuery.data?.IsSnapshotImportRunning && (
           <BigLoader
             full={true}
             label="Finalize the configuration and launch the node"

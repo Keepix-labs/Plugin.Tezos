@@ -18,19 +18,18 @@ namespace Plugin.Tezos.Commands
             {
                 return false;
             }
-            {
-                stateManager = PluginStateManager.GetStateManager();
-                stateManager.DB.Store("STATE", PluginStateEnum.INSTALLING_SNAPSHOT);
-                var isSnapshotDownloaded = await SetupService.DownloadSnapshot(Configurations.TEZOS_SNAPSHOT, "/root/tezos-mainnet.rolling");
-                if (!isSnapshotDownloaded)
-                {
-                    LoggerService.Log("Downloaded of the snapshot failed");
-                    return false;
-                }
 
-                stateManager.DB.Store("SECRET_WALLET", input.WalletSecretKey);
-                await SetupService.setupNode(stateManager);
+            stateManager = PluginStateManager.GetStateManager();
+            stateManager.DB.Store("STATE", PluginStateEnum.INSTALLING_SNAPSHOT);
+            var isSnapshotDownloaded = await SetupService.DownloadSnapshot(Configurations.TEZOS_SNAPSHOT, SetupService.GetSnapshotPath());
+            if (!isSnapshotDownloaded)
+            {
+                LoggerService.Log("Downloaded of the snapshot failed");
+                return false;
             }
+
+            stateManager.DB.Store("WalletAddress", input.WalletSecretKey);
+            await SetupService.setupNode(stateManager);
 
             return true;
         }
@@ -39,7 +38,8 @@ namespace Plugin.Tezos.Commands
         public static async Task<bool> OnStartSynchronization()
         {
 
-            await ProcessService.ExecuteCommand("docker", "compose up import -d");
+            var command = $"export SNAPSHOT_PATH={SetupService.GetSnapshotPath()}; docker compose up import -d";
+            await ProcessService.ExecuteCommand("bash", $"-c \"{command}\"");
             stateManager = PluginStateManager.GetStateManager();
             stateManager.DB.Store("STATE", PluginStateEnum.STARTING_SYNC);
             return true;

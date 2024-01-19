@@ -3,6 +3,7 @@ using Plugin.Tezos.src.Utils;
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -109,7 +110,7 @@ namespace Plugin.Tezos.src.Services
             await ProcessService.ExecuteCommand("docker", $"exec octez-public-node-rolling octez-client --endpoint http://localhost:8732 config update");
             stateManager = PluginStateManager.GetStateManager();
             var walletSecret = "";
-            try { walletSecret = stateManager.DB.Retrieve<string>("SECRET_WALLET"); } catch { }
+            try { walletSecret = stateManager.DB.Retrieve<string>("WalletAddress"); } catch { }
             if (walletSecret != "")
                 await ProcessService.ExecuteCommand("docker", $"exec octez-public-node-rolling octez-client import secret key WalletAddress unencrypted:{walletSecret}");
         }
@@ -144,6 +145,34 @@ namespace Plugin.Tezos.src.Services
             catch
             {
                 LoggerService.Log("Installing node failed");
+            }
+        }
+
+        public static string GetSnapshotPath()
+        {
+            var username = Environment.UserName;
+            var basePath = "";
+
+            if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
+            {
+                basePath = $"C:/Users/{username}/tezos-mainnet.rolling";
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
+            {
+                basePath = $"/root/tezos-mainnet.rolling"; // Note: Linux users typically don't have write access to /root
+            }
+            else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                basePath = $"/Users/{username}/tezos-mainnet.rolling";
+            }
+
+            if (Directory.Exists(basePath) || File.Exists(basePath))
+            {
+                return basePath;
+            }
+            else
+            {
+                throw new Exception($"The specified path does not exist: {basePath}");
             }
         }
 

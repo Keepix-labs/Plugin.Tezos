@@ -21,7 +21,8 @@ namespace Plugin.Tezos.src.Commands
         {
             stateManager = PluginStateManager.GetStateManager();
             var isDockerRunning = await SetupService.IsDockerRunning();
-            if (!isDockerRunning)
+            var isContainerRunning = await SetupService.IsContainnerRunning();
+            if (!isDockerRunning || !isContainerRunning)
             {
                 string? address = stateManager.DB.Retrieve<string>("WalletAddress");
                 if (!string.IsNullOrEmpty(address))

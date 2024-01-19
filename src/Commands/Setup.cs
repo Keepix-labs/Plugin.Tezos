@@ -38,8 +38,11 @@ namespace Plugin.Tezos.Commands
         public static async Task<bool> OnStartSynchronization()
         {
 
-            var command = $"export SNAPSHOT_PATH={SetupService.GetSnapshotPath()}; docker compose up import -d";
-            await ProcessService.ExecuteCommand("bash", $"-c \"{command}\"");
+            var envVars = new Dictionary<string, string>
+            {
+                { "SNAPSHOT_PATH", SetupService.GetSnapshotPath() }
+            };
+            await ProcessService.ExecuteCommand("docker", "compose up import -d", null, envVars);
             stateManager = PluginStateManager.GetStateManager();
             stateManager.DB.Store("STATE", PluginStateEnum.STARTING_SYNC);
             return true;
@@ -58,7 +61,11 @@ namespace Plugin.Tezos.Commands
         public static async Task<bool> OnStartConfiguration()
         {
 
-            await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
+            var envVars = new Dictionary<string, string>
+            {
+                { "SNAPSHOT_PATH", SetupService.GetSnapshotPath() }
+            };
+            await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling", null, envVars);
             Thread.Sleep(1000);
             await SetupService.initConfig();
             stateManager = PluginStateManager.GetStateManager();
@@ -122,8 +129,13 @@ namespace Plugin.Tezos.Commands
 
             try
             {
+                var envVars = new Dictionary<string, string>
+                {
+                    { "SNAPSHOT_PATH", SetupService.GetSnapshotPath() }
+                };
                 stateManager = PluginStateManager.GetStateManager();
-                await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
+                
+                await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling", null, envVars);
                 await SetupService.initConfig();
                 stateManager.DB.Store("STATE", PluginStateEnum.NODE_RUNNING);
                 LoggerService.Log("Smart-node successfully started");

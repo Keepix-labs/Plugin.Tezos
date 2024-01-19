@@ -93,10 +93,15 @@ namespace Plugin.Tezos.src.Services
         {
             try
             {
+                
+                var envVars = new Dictionary<string, string>
+                {
+                    { "SNAPSHOT_PATH", SetupService.GetSnapshotPath() }
+                };
                 state.DB.Store("STATE", PluginStateEnum.INSTALLING_NODE);
-                await ProcessService.ExecuteCommand("docker", "compose up import");
+                await ProcessService.ExecuteCommand("docker", "compose up import", null, envVars);
                 state.DB.Store("STATE", PluginStateEnum.NODE_RUNNING);
-                await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
+                await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling", null, envVars);
             }
             catch (Exception ex)
             {
@@ -129,12 +134,17 @@ namespace Plugin.Tezos.src.Services
                 catch { }
                 Thread.Sleep(1000);
 
-                await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling");
+                var envVars = new Dictionary<string, string>
+                {
+                    { "SNAPSHOT_PATH", SetupService.GetSnapshotPath() }
+                };
+
+                await ProcessService.ExecuteCommand("docker", "compose up -d node_rolling", null, envVars);
                 Thread.Sleep(4000);
                 await ProcessService.ExecuteCommand("docker", "exec octez-public-node-rolling rm /var/run/tezos/node/data/lock");
                 await ProcessService.ExecuteCommand("docker", "exec octez-public-node-rolling rm -r /var/run/tezos/node/data");
                 Thread.Sleep(1000);
-                await ProcessService.ExecuteCommand("docker", "compose stop node_rolling");
+                await ProcessService.ExecuteCommand("docker", "compose stop node_rolling", null, envVars);
                 await Task.Delay(1000);
                 await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/context");
                 await ProcessService.ExecuteCommand("rm", "-rf /var/lib/docker/volumes/mainnet-node/_data/data/store");
@@ -155,25 +165,21 @@ namespace Plugin.Tezos.src.Services
 
             if (RuntimeInformation.IsOSPlatform(OSPlatform.Windows))
             {
-                basePath = $"C:/Users/{username}/tezos-mainnet.rolling";
+                string tempPath = System.IO.Path.GetTempPath();
+                basePath = Path.Combine(tempPath, "tezos-mainnet.rolling");
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux))
             {
-                basePath = $"/root/tezos-mainnet.rolling"; // Note: Linux users typically don't have write access to /root
+                basePath = $"/tmp/tezos-mainnet.rolling"; 
             }
             else if (RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
             {
-                basePath = $"/Users/{username}/tezos-mainnet.rolling";
+                basePath = $"/tmp/tezos-mainnet.rolling"; 
+
             }
 
-            if (Directory.Exists(basePath) || File.Exists(basePath))
-            {
-                return basePath;
-            }
-            else
-            {
-                throw new Exception($"The specified path does not exist: {basePath}");
-            }
+            return basePath;
+
         }
 
         public static async Task<bool> ApplyRules(params Func<Task<bool>>[] ruleFunctions)

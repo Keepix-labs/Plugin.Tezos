@@ -27,7 +27,7 @@
   },
   "scripts": {
     "start": "npm run p-build-debug && react-app-rewired start",
-    "dev": "REACT_APP_API_URL=http://65.109.96.163:2002 react-app-rewired start",
+    "dev": "REACT_APP_API_URL=http://127.0.0.1:2004 react-app-rewired start",
     "start-without-front": "npm run p-build-debug && node -e \"const { paths } = require('./config-overrides.js'); paths({});\" start.js",
     "increase-build-version": "increase-build-package-public-directory && increase-build-package-public-directory public",
     "build": "npm run p-build-all && npm run increase-build-version && PUBLIC_URL=/plugins/Plugin.Tezos/view react-app-rewired build && cp -R ./dist ./build",

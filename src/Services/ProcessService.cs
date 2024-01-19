@@ -11,7 +11,7 @@ namespace Plugin.Tezos.src.Services
 {
     public class ProcessService
     {
-        public static async Task<string> ExecuteCommand(string command, string arguments, Func<Process, Task<string>> execute = null)
+        public static async Task<string> ExecuteCommand(string command, string arguments, Func<Process, Task<string>> execute = null, Dictionary<string, string> envVars = null)
         {
             try
             {
@@ -23,6 +23,15 @@ namespace Plugin.Tezos.src.Services
                     UseShellExecute = false,
                     CreateNoWindow = true,
                 };
+                startInfo.RedirectStandardError = true;
+
+                if (envVars != null)
+                {
+                    foreach (var envVar in envVars)
+                    {
+                        startInfo.EnvironmentVariables[envVar.Key] = envVar.Value;
+                    }
+                }
 
                 using (Process process = new Process { StartInfo = startInfo })
                 {
@@ -30,6 +39,8 @@ namespace Plugin.Tezos.src.Services
                     if (execute == null)
                     {
                         string result = await process.StandardOutput.ReadToEndAsync();
+                        string error = await process.StandardError.ReadToEndAsync();
+                        Console.WriteLine(error);
                         process.WaitForExit();
                         return result;
                     }
